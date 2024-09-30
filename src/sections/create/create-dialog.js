@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
-import { Box } from '@mui/material';
+import { Box, Divider } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -18,8 +18,6 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 // hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 
-import { useRouter } from 'src/routes/hooks';
-
 import { config } from 'src/config';
 
 import { contract } from '../../constant/contract';
@@ -27,13 +25,14 @@ import moduleFactoryAbi from '../../constant/moduleFactory.json';
 
 export default function CreateForm() {
   const chainId = useChainId();
-  const router = useRouter();
   const { address } = useAccount();
   const { enqueueSnackbar } = useSnackbar();
   const NewUserSchema = Yup.object().shape({
     name: Yup.string().required('Token name is required'),
     symbol: Yup.string().required('Symbol is required'),
     emission: Yup.number().min(0, 'Emission must not be below 0').required('Emission is required'),
+    site: Yup.string().url('Must be a valid URL').required('Site should exist'),
+    github: Yup.string().url('Must be a valid URL').required('Code should exist'),
     avatarUrl: Yup.string().url('Must be a valid URL').nullable(),
     facebook: Yup.string(),
     linkedin: Yup.string(),
@@ -44,6 +43,8 @@ export default function CreateForm() {
     name: '',
     symbol: '',
     emission: 0.01,
+    site: '',
+    github: '',
     avatarUrl: '',
     facebook: '',
     linkedin: '',
@@ -96,7 +97,7 @@ export default function CreateForm() {
           const para = [
             tokenAddress,
             data.emission * 10 ** 4,
-            `${data.avatarUrl}$#$${data.facebook}$#$${data.linkedin}$#$${data.instagram}$#$${data.twitter}`,
+            `${data.avatarUrl}$#$${data.facebook}$#$${data.linkedin}$#$${data.instagram}$#$${data.twitter}$#$${data.site}$#$${data.github}`,
             [data.name, data.symbol],
           ];
           const result = await writeContract(config, {
@@ -110,9 +111,8 @@ export default function CreateForm() {
           if (response != null) {
             if (response && response.status && response.status === 'success') {
               enqueueSnackbar('Module created successfully!', { variant: 'success' });
-              const moduleAddress = response.logs[4].address;
-              dialog.onFalse;
-              router.push(`/dashboard/${moduleAddress}/detail`);
+              dialog.onFalse();
+              // router.push(`/dashboard/${moduleAddress}/detail`);
             }
           }
 
@@ -134,8 +134,8 @@ export default function CreateForm() {
   });
   return (
     <>
-      <Button variant="contained" color="primary" onClick={dialog.onTrue} sx={{padding: '5px 15px', fontSize: "20px", minWidth:'140px'}}>
-      Create Coin
+      <Button variant="contained" color="primary" onClick={dialog.onTrue} sx={{padding: '5px 20px', fontSize: "20px", minWidth:'300px'}}>
+        Create Meme Coin & Module
       </Button>
       <Dialog open={dialog.value} onClose={dialog.onFalse}>
         {isSubmitting && (
@@ -157,10 +157,27 @@ export default function CreateForm() {
               }}
               pt={2}
             >
-              <RHFTextField name="name" label="Token Name" />
-              <RHFTextField name="symbol" label="Symbol" />
-              <RHFTextField name="emission" label="Emission(% Per day)" />
+              <RHFTextField name="name" label="Token Name*" />
+              <RHFTextField name="symbol" label="Symbol*" />
+              <RHFTextField name="emission" label="Emission(% Per day)*" />
               <RHFTextField name="avatarUrl" label="Image Url" />
+              <RHFTextField name="site" label="Site Link*" />
+              <RHFTextField name="github" label="Git Link*" />
+            </Box>
+            <Box mt={3}>
+              <Divider>Socials</Divider>
+            </Box>
+
+            <Box
+              rowGap={3}
+              columnGap={2}
+              display="grid"
+              gridTemplateColumns={{
+                xs: 'repeat(1, 1fr)',
+                sm: 'repeat(2, 1fr)',
+              }}
+              pt={2}
+            >
               <RHFTextField name="facebook" label="Facebook" />
               <RHFTextField name="linkedin" label="Linkedin" />
               <RHFTextField name="instagram" label="Instagram" />
